@@ -113,10 +113,12 @@ logger_init(void)
 		exit(EX_NOPERM);
 	}
 
+#ifdef __OpenBSD__
 	if (pledge("stdio cpath wpath", NULL) == -1) {
 		syslog(LOG_ERR, "%s: pledge", __func__);
 		exit(EX_NOPERM);
 	}
+#endif
 
 	event_init();
 

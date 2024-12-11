@@ -578,7 +578,11 @@ icb_dowho(struct icb_session *is, struct icb_group *ig)
 	icb_cmdout(is, CMDOUT_CO, buf);
 	LIST_FOREACH(s, &ig->sess, entry) {
 		(void)snprintf(buf, sizeof buf,
+#ifdef __NetBSD__
+		    "%c%c%s%c%ld%c0%c%ld%c%s%c%s%c%s",
+#else
 		    "%c%c%s%c%lld%c0%c%lld%c%s%c%s%c%s",
+#endif
 		    icb_ismod(ig, s) ? 'm' : ' ', ICB_M_SEP,
 		    s->nick, ICB_M_SEP, now - s->last,
 		    ICB_M_SEP, ICB_M_SEP, s->login, ICB_M_SEP,

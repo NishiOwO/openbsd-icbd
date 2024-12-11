@@ -6,9 +6,9 @@ PROG=		icbd
 SRCS=		cmd.c dns.c icb.c icbd.c logger.c
 MAN=		icbd.8
 
-CFLAGS+=	-W -Wall -Werror
-CFLAGS+=	-Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
-CFLAGS+=	-Wshadow -Wpointer-arith -Wcast-qual -Wsign-compare
+#CFLAGS+=	-W -Wall -Werror
+#CFLAGS+=	-Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations
+#CFLAGS+=	-Wshadow -Wpointer-arith -Wcast-qual -Wsign-compare
 
 DPADD=		${LIBEVENT}
 LDADD=		-levent

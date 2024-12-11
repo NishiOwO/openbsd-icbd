@@ -174,7 +174,7 @@ main(int argc, char *argv[])
 			hints.ai_family = PF_UNSPEC;
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_flags = AI_PASSIVE;
-		if ((error = getaddrinfo(addr, port ? port : "icb", &hints,
+		if ((error = getaddrinfo(addr, port ? port : "7326", &hints,
 		    &res0)) != 0) {
 			syslog(LOG_ERR, "%s", gai_strerror(error));
 			return (EX_UNAVAILABLE);
@@ -498,6 +498,7 @@ icbd_restrict(void)
 		exit(EX_NOPERM);
 	}
 
+#ifdef __OpenBSD__
 	if (dodns) {
 		if (pledge("stdio inet rpath dns", NULL) == -1) {
 			syslog(LOG_ERR, "pledge");
@@ -509,6 +510,7 @@ icbd_restrict(void)
 			exit(EX_NOPERM);
 		}
 	}
+#endif
 
 	(void)setproctitle("icbd");
 }

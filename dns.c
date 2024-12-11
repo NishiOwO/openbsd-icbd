@@ -27,7 +27,18 @@
 #include <string.h>
 #include <syslog.h>
 
+#ifdef __NetBSD__
+#define NO_ASYNC
+#endif
+
+#ifdef NO_ASYNC
+struct asr_result {
+	struct addrinfo* ar_addrinfo;
+	int ar_gai_errno;
+};
+#else
 #include <asr.h>
+#endif
 
 #include "icb.h"
 #include "icbd.h"
@@ -85,7 +96,11 @@ void
 dns_done_reverse(struct asr_result *ar, void *arg)
 {
 	struct icb_session *is = arg;
+#ifdef NO_ASYNC
+	struct asr_result result;
+#else
 	struct asr_query *as;
+#endif
 	struct addrinfo	hints;
 
 	if (ISSETF(is->flags, ICB_SF_PENDINGDROP)) {
@@ -99,8 +114,14 @@ dns_done_reverse(struct asr_result *ar, void *arg)
 		/* try to verify that it resolves back */
 		memset(&hints, 0, sizeof(hints));
 		hints.ai_family = PF_UNSPEC;
+#ifdef NO_ASYNC
+		getaddrinfo(is->hostname, NULL, &hints, &result.ar_addrinfo);
+		result.ar_gai_errno = errno;
+		dns_done_host(&result, is);
+#else
 		as = getaddrinfo_async(is->hostname, NULL, &hints, NULL);
 		event_asr_run(as, dns_done_host, is);
+#endif
 	} else {
 		icbd_log(is, LOG_DEBUG, "reverse dns resolution failed: %s",
 		    gai_strerror(ar->ar_gai_errno));
@@ -129,7 +150,11 @@ cmp_addr(struct sockaddr *a, struct sockaddr *b)
 void
 dns_resolve(struct icb_session *is)
 {
+#ifdef NO_ASYNC
+	struct asr_result result;
+#else
 	struct asr_query *as;
+#endif
 
 	if (!dodns)
 		return;
@@ -139,9 +164,17 @@ dns_resolve(struct icb_session *is)
 	if (verbose)
 		icbd_log(is, LOG_DEBUG, "resolving: %s", is->host);
 
+#ifdef NO_ASYNC
+	getnameinfo((struct sockaddr *)&is->ss,
+		    ((struct sockaddr *)&is->ss)->sa_len, is->hostname,
+		    sizeof is->hostname, NULL, 0, NI_NOFQDN);
+	result.ar_gai_errno = errno;
+	dns_done_reverse(&result, is);
+#else
 	as = getnameinfo_async((struct sockaddr *)&is->ss,
 	    ((struct sockaddr *)&is->ss)->sa_len, is->hostname,
 	    sizeof is->hostname, NULL, 0, NI_NOFQDN, NULL);
 	event_asr_run(as, dns_done_reverse, is);
+#endif
 }
 
